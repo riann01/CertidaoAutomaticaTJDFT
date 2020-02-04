@@ -4,36 +4,35 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.TimeZone;
 import javax.swing.ListModel;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFHeader;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
-import java.awt.print.*;
 import certidaoautomatica.ListModelArrayList;
 import certidaoautomatica.Process;
+import java.text.DateFormat;
+import java.util.Locale;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 
 public class MainScreen extends javax.swing.JFrame implements ActionListener {
 
-    private String dest = "etc/CERTIDAO-2.pdf";
-    private Calendar novo = Calendar.getInstance(TimeZone.getTimeZone("America/Brasilia"));
-    private String year = novo.getTime().toString().substring(novo.getTime().toString().length() - 4, novo.getTime().toString().length());
+    private Locale l = new Locale("pt", "BR");
+    private DateFormat df = DateFormat.getDateInstance(DateFormat.LONG, l);
+    private Calendar c = Calendar.getInstance();
+    private String[] split = df.format(c.getTime()).split(" ");
+    private String year = split[split.length - 1];
     private ListModelArrayList lm = new ListModelArrayList();
     private List<XWPFDocument> certidoes = new ArrayList<>();
-    private File certidao = new File("etc/CERTIDÃO.docx");
-    private int keyNum = 1;
-    private int bckSpace = 1;
-    private String buffer = "";
+    private List<String> prep = new ArrayList<>();
+    private File certidao = new File("C:\\Users\\Rian\\Documents\\NetBeansProjects\\CertidaoAutomatica\\src\\etc\\CERTIDÃO.docx");
 
     public MainScreen() {
         initComponents();
@@ -47,7 +46,7 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
         cbBox.addActionListener(this);
         txtFieldProcess.setText(year + getCircunscricao(1) + "10000000");
         processList.setModel((ListModel) lm);
-        txtFieldProcess.setEditable(false);
+        createPrepList();
     }
 
     public void loadFile(Process process) {
@@ -55,16 +54,42 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
         XWPFDocument doc;
         try {
             doc = new XWPFDocument(OPCPackage.open(certidao.getCanonicalPath()));
+            List<XWPFTable> headerTables = doc.getHeaderList().get(0).getTables();
+            List<XWPFTableRow> headerTableRow = headerTables.get(0).getRows();
+            List<XWPFTableCell> headerTableCell = headerTableRow.get(0).getTableCells();
+            List<XWPFParagraph> headerParagraphsCell = headerTableCell.get(0).getParagraphs();
+            for (int i = 0; i < headerParagraphsCell.size(); i++) {
+                if (headerParagraphsCell.get(i).getText().contains("[SQ_NUM]")) {
+                    String returnV = headerParagraphsCell.get(i).getText().replace("[SQ_NUM]", String.valueOf(process.getPgNum() + 1));
+                    List<XWPFRun> runs = headerParagraphsCell.get(i).getRuns();
+                    runs.get(1).setText("", 0);
+                    runs.get(2).setText("", 0);
+                    runs.get(3).setText("", 0);
+                    runs.get(4).setText("", 0);
+                    runs.get(0).setText(returnV, 0);
+                }
+            }
             List<XWPFParagraph> headerParagraphs = doc.getHeaderList().get(0).getParagraphs();
             for (int i = 0; i < headerParagraphs.size(); i++) {
                 if (!headerParagraphs.get(i).isEmpty()) {
                     System.out.println(headerParagraphs.get(i).getText());
+                    if (headerParagraphs.get(i).getText().contains("[TWORD]")) {
+                        String returnV = headerParagraphs.get(i).getText().replace("[TWORD]", prep.get(cbBox.getSelectedIndex()));
+                        System.out.println(returnV);
+                        XWPFParagraph current = headerParagraphs.get(i);
+                        XWPFRun run = current.getRuns().get(0);
+                        current.getRuns().get(1).setText("", 0);
+                        current.getRuns().get(2).setText("", 0);
+                        run.setText(returnV, 0);
+                    }
                     if (headerParagraphs.get(i).getText().contains("[CIRCUNSCRIÇÃO]")) {
                         String returnV = headerParagraphs.get(i).getText().replace("[CIRCUNSCRIÇÃO]", getCircunscricao(3));
                         System.out.println(returnV);
                         XWPFParagraph current = headerParagraphs.get(i);
                         XWPFRun run = current.getRuns().get(0);
+                        run.setText("", 0);
                         current.getRuns().get(1).setText("", 0);
+                        current.getRuns().get(2).setText("", 0);
                         run.setText(returnV, 0);
                     }
                 }
@@ -84,6 +109,24 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
                     }
                     if (docParagraphs.get(i).getText().contains("[PROCESS_NUMBER]")) {
                         String returnV = docParagraphs.get(i).getText().replace("[PROCESS_NUMBER]", process.getNumber());
+                        System.out.println(returnV);
+                        XWPFParagraph current = docParagraphs.get(i);
+                        XWPFRun run = current.getRuns().get(0);
+                        current.getRuns().get(1).setText("", 0);
+                        run.setText(returnV, 0);
+                    }
+                    if (docParagraphs.get(i).getText().contains("[PG_NUMBER]")) {
+                        String returnV = docParagraphs.get(i).getText().replace("[PG_NUMBER]", String.valueOf(process.getPgNum()));
+                        System.out.println(returnV);
+                        XWPFParagraph current = docParagraphs.get(i);
+                        XWPFRun run = current.getRuns().get(0);
+                        current.getRuns().get(1).setText("", 0);
+                        current.getRuns().get(2).setText("", 0);
+                        current.getRuns().get(3).setText("", 0);
+                        run.setText(returnV, 0);
+                    }
+                    if (docParagraphs.get(i).getText().contains("[DATE]")) {
+                        String returnV = docParagraphs.get(i).getText().replace("[DATE]", df.format(c.getTime()));
                         System.out.println(returnV);
                         XWPFParagraph current = docParagraphs.get(i);
                         XWPFRun run = current.getRuns().get(0);
@@ -141,18 +184,42 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
 
     public String getCircunscricao(int prop) {
         String splitC[] = cbBox.getSelectedItem().toString().split("-");
+        splitC[0] = splitC[0].replaceFirst(" ", "");
         switch (prop) {
             case 1:
-                return splitC[0].replaceFirst(" ", "");
+                return splitC[0];
             case 2:
                 if (prop == 2 && splitC[0].equals("01")) {
-                    return "BRASÍLIA";
+                    return "BRASÍLIA - DF";
+                } else {
+                    return splitC[splitC.length - 1].replaceFirst(" ", "") + " - DF";
                 }
             case 3:
                 return splitC[splitC.length - 1].replaceFirst(" ", "");
         }
         return null;
 
+    }
+
+    public void createPrepList() {
+        prep.add("");
+        prep.add("");
+        prep.add("");
+        prep.add("DE");
+        prep.add("DE");
+        prep.add("DO");
+        prep.add("DE");
+        prep.add("DE");
+        prep.add("DE");
+        prep.add("DO");
+        prep.add("DE");
+        prep.add("DE");
+        prep.add("DO");
+        prep.add("DE");
+        prep.add("DO");
+        prep.add("DO");
+        prep.add("DO");
+        prep.add("DE");
     }
 
     @Override
@@ -165,15 +232,20 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
         }
         if (e.getSource() == btnInclude) {
             try {
-                //loadFile("C:\\Users\\Rian\\Documents\\NetBeansProjects\\CertidaoAutomatica\\src\\etc\\CERTIDÃO.docx");
-                Process process = new Process();
-                process.setNumber(txtFieldProcess.getText());
-                process.setPgNum(Integer.parseInt(txtFieldQtdPag.getText()));
-                lm.addElement(process);
-                processList.setModel((ListModel) lm);
-                processList.updateUI();
-                txtFieldProcess.setText(year + getCircunscricao(1) + "10000000");
-                txtFieldQtdPag.setText("");
+                int num = Integer.parseInt(txtFieldQtdPag.getText());
+                if (num < 1 || num > 9999) {
+                    JOptionPane.showMessageDialog(this, "Por favor, digite um número entre 1 e 9999.");
+                    txtFieldQtdPag.setText("");
+                } else {
+                    Process process = new Process();
+                    process.setNumber(txtFieldProcess.getText());
+                    process.setPgNum(Integer.parseInt(txtFieldQtdPag.getText()));
+                    lm.addElement(process);
+                    processList.setModel((ListModel) lm);
+                    processList.updateUI();
+                    txtFieldProcess.setText(year + getCircunscricao(1) + "10000000");
+                    txtFieldQtdPag.setText("");
+                }
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Por favor, digite um número entre 1 e 9999.");
             }
@@ -198,10 +270,12 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
             /*for (int i = 0; i < certidoes.size(); i++) {
 
             }*/
-            if (lm.getSize() == 0) {
+            if (lm.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Nenhum processo foi inserido.");
             }
-            loadFile(lm.getElementAt(0));
+            else {
+                loadFile(lm.getElementAt(0));
+            }
         }
     }
 
@@ -215,12 +289,14 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
         jLabel2 = new javax.swing.JLabel();
         btnInclude = new javax.swing.JButton();
         txtFieldProcess = new javax.swing.JFormattedTextField();
+        jCheckBox1 = new javax.swing.JCheckBox();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         processList = new javax.swing.JList<>();
         btnDelete = new javax.swing.JButton();
         btnUp = new javax.swing.JButton();
         btnDown = new javax.swing.JButton();
+        btnClear = new javax.swing.JButton();
         btnPrint = new javax.swing.JButton();
         btnClose = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
@@ -242,29 +318,32 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
         } catch (java.text.ParseException ex) {
             ex.printStackTrace();
         }
-        txtFieldProcess.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                txtFieldProcessKeyPressed(evt);
-            }
-        });
+
+        jCheckBox1.setText("Limpar a lista ao terminar");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel1)
-                    .addComponent(txtFieldProcess, javax.swing.GroupLayout.PREFERRED_SIZE, 176, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 130, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtFieldQtdPag, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addComponent(txtFieldProcess, javax.swing.GroupLayout.PREFERRED_SIZE, 176, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 130, Short.MAX_VALUE)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtFieldQtdPag, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel2)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(218, 218, 218)
+                        .addComponent(btnInclude)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(218, 218, 218)
-                .addComponent(btnInclude)
+                .addGap(163, 163, 163)
+                .addComponent(jCheckBox1)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -278,7 +357,9 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtFieldQtdPag, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtFieldProcess, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 28, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(jCheckBox1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE)
                 .addComponent(btnInclude)
                 .addContainerGap())
         );
@@ -300,18 +381,22 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
         btnDown.setFont(new java.awt.Font("Tahoma", 0, 36)); // NOI18N
         btnDown.setText("˅");
 
+        btnClear.setText("Limpar");
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addComponent(jScrollPane1)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(btnUp, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(btnDown, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnUp, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(btnDown, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnClear, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -326,7 +411,9 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
                         .addComponent(btnUp, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(btnDown, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 156, Short.MAX_VALUE))))
+                        .addGap(18, 18, 18)
+                        .addComponent(btnClear, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 78, Short.MAX_VALUE))))
         );
 
         btnPrint.setText("Imprimir");
@@ -399,63 +486,6 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void txtFieldProcessKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFieldProcessKeyPressed
-        buffer = buffer + evt.getKeyChar();
-        ++keyNum;
-        String processNumber = txtFieldProcess.getText();
-        System.out.println(evt.getKeyChar());
-        switch (keyNum) {
-            case 1:
-                processNumber = processNumber.substring(0, txtFieldProcess.getText().length() - 1);
-                processNumber = processNumber + buffer;
-                txtFieldProcess.setText(processNumber);
-                break;
-            case 2:
-                processNumber = processNumber.substring(0, txtFieldProcess.getText().length() - 2);
-                processNumber = processNumber + buffer;
-                txtFieldProcess.setText(processNumber);
-                break;
-            case 3:
-                processNumber = processNumber.substring(0, txtFieldProcess.getText().length() - 3);
-                processNumber = processNumber + buffer;
-                txtFieldProcess.setText(processNumber);
-                break;
-            case 4:
-                processNumber = processNumber.substring(0, txtFieldProcess.getText().length() - 4);
-                processNumber = processNumber + buffer;
-                txtFieldProcess.setText(processNumber);
-                break;
-            case 5:
-                processNumber = processNumber.substring(0, txtFieldProcess.getText().length() - 5);
-                processNumber = processNumber + buffer;
-                txtFieldProcess.setText(processNumber);
-                break;
-            case 6:
-                processNumber = processNumber.substring(0, txtFieldProcess.getText().length() - 6);
-                processNumber = processNumber + buffer;
-                txtFieldProcess.setText(processNumber);
-                break;
-            case 7:
-                processNumber = processNumber.substring(0, txtFieldProcess.getText().length() - 7);
-                processNumber = processNumber + buffer;
-                txtFieldProcess.setText(processNumber);
-                break;
-            case 8:
-                processNumber = processNumber.substring(0, txtFieldProcess.getText().length() - 8);
-                processNumber = processNumber + buffer;
-                txtFieldProcess.setText(processNumber);
-                break;
-        }
-        if (evt.getKeyChar() == evt.VK_BACK_SPACE) {
-            
-        }
-
-        if (keyNum == 8) {
-            keyNum = 0;
-            buffer = "";
-        }
-    }//GEN-LAST:event_txtFieldProcessKeyPressed
-
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -489,6 +519,7 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnClear;
     private javax.swing.JButton btnClose;
     private javax.swing.JButton btnDelete;
     private javax.swing.JButton btnDown;
@@ -496,6 +527,7 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
     private javax.swing.JButton btnPrint;
     private javax.swing.JButton btnUp;
     private javax.swing.JComboBox<String> cbBox;
+    private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

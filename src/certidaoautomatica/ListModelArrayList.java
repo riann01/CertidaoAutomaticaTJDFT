@@ -23,5 +23,9 @@ public class ListModelArrayList extends javax.swing.AbstractListModel<Process>{
     public void removeElement(Process el) {
         process.remove(el);
     }
+    
+    public boolean isEmpty() {
+        return process.isEmpty();
+    }
 
 }

@@ -78,21 +78,30 @@
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" attributes="0">
-                  <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
-                      <Component id="txtFieldProcess" min="-2" pref="176" max="-2" attributes="0"/>
-                  </Group>
-                  <EmptySpace pref="130" max="32767" attributes="0"/>
-                  <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="txtFieldQtdPag" min="-2" pref="190" max="-2" attributes="0"/>
-                      <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
+                      <Group type="102" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
+                              <Component id="txtFieldProcess" min="-2" pref="176" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace pref="130" max="32767" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="txtFieldQtdPag" min="-2" pref="190" max="-2" attributes="0"/>
+                              <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <Group type="102" attributes="0">
+                          <EmptySpace min="-2" pref="218" max="-2" attributes="0"/>
+                          <Component id="btnInclude" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      </Group>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
               <Group type="102" alignment="0" attributes="0">
-                  <EmptySpace min="-2" pref="218" max="-2" attributes="0"/>
-                  <Component id="btnInclude" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="163" max="-2" attributes="0"/>
+                  <Component id="jCheckBox1" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="32767" attributes="0"/>
               </Group>
           </Group>
@@ -110,7 +119,9 @@
                       <Component id="txtFieldQtdPag" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="txtFieldProcess" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace pref="28" max="32767" attributes="0"/>
+                  <EmptySpace type="separate" max="-2" attributes="0"/>
+                  <Component id="jCheckBox1" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace pref="15" max="32767" attributes="0"/>
                   <Component id="btnInclude" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
@@ -141,9 +152,11 @@
               <Format format="####.##.#.######-#" subtype="-1" type="5"/>
             </Property>
           </Properties>
-          <Events>
-            <EventHandler event="keyPressed" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="txtFieldProcessKeyPressed"/>
-          </Events>
+        </Component>
+        <Component class="javax.swing.JCheckBox" name="jCheckBox1">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Limpar a lista ao terminar"/>
+          </Properties>
         </Component>
       </SubComponents>
     </Container>
@@ -160,14 +173,17 @@
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" alignment="0" attributes="0">
-                  <Component id="jScrollPane1" max="32767" attributes="0"/>
+                  <Component id="jScrollPane1" pref="419" max="32767" attributes="0"/>
                   <EmptySpace type="unrelated" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="btnDelete" min="-2" pref="77" max="-2" attributes="0"/>
-                          <Component id="btnUp" alignment="1" min="-2" pref="77" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="btnDelete" min="-2" pref="77" max="-2" attributes="0"/>
+                              <Component id="btnUp" alignment="1" min="-2" pref="77" max="-2" attributes="0"/>
+                          </Group>
+                          <Component id="btnDown" alignment="1" min="-2" pref="77" max="-2" attributes="0"/>
                       </Group>
-                      <Component id="btnDown" alignment="1" min="-2" pref="77" max="-2" attributes="0"/>
+                      <Component id="btnClear" alignment="1" min="-2" pref="77" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
@@ -185,7 +201,9 @@
                           <Component id="btnUp" min="-2" pref="60" max="-2" attributes="0"/>
                           <EmptySpace type="separate" max="-2" attributes="0"/>
                           <Component id="btnDown" min="-2" pref="60" max="-2" attributes="0"/>
-                          <EmptySpace min="0" pref="156" max="32767" attributes="0"/>
+                          <EmptySpace type="separate" max="-2" attributes="0"/>
+                          <Component id="btnClear" min="-2" pref="60" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="78" max="32767" attributes="0"/>
                       </Group>
                   </Group>
               </Group>
@@ -237,6 +255,11 @@
               <Font name="Tahoma" size="36" style="0"/>
             </Property>
             <Property name="text" type="java.lang.String" value="&#x2c5;"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JButton" name="btnClear">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Limpar"/>
           </Properties>
         </Component>
       </SubComponents>
