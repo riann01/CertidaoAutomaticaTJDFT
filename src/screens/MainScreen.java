@@ -21,6 +21,7 @@ import java.text.DateFormat;
 import java.util.Locale;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
+import java.awt.Desktop;
 
 public class MainScreen extends javax.swing.JFrame implements ActionListener {
 
@@ -33,6 +34,8 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
     private List<XWPFDocument> certidoes = new ArrayList<>();
     private List<String> prep = new ArrayList<>();
     private File certidao = new File("C:\\Users\\Rian\\Documents\\NetBeansProjects\\CertidaoAutomatica\\src\\etc\\CERTIDÃO.docx");
+    private String folder = "C:/temp/";
+    private String fileName = "saida.docx";
 
     public MainScreen() {
         initComponents();
@@ -54,7 +57,7 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
         XWPFDocument doc;
         try {
             doc = new XWPFDocument(OPCPackage.open(certidao.getCanonicalPath()));
-            List<XWPFTable> headerTables = doc.getHeaderList().get(0).getTables();
+            List<XWPFTable> headerTables = doc.getTables();
             List<XWPFTableRow> headerTableRow = headerTables.get(0).getRows();
             List<XWPFTableCell> headerTableCell = headerTableRow.get(0).getTableCells();
             List<XWPFParagraph> headerParagraphsCell = headerTableCell.get(0).getParagraphs();
@@ -63,41 +66,39 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
                     String returnV = headerParagraphsCell.get(i).getText().replace("[SQ_NUM]", String.valueOf(process.getPgNum() + 1));
                     List<XWPFRun> runs = headerParagraphsCell.get(i).getRuns();
                     runs.get(1).setText("", 0);
-                    runs.get(2).setText("", 0);
-                    runs.get(3).setText("", 0);
-                    runs.get(4).setText("", 0);
                     runs.get(0).setText(returnV, 0);
                 }
             }
-            List<XWPFParagraph> headerParagraphs = doc.getHeaderList().get(0).getParagraphs();
+            /*List<XWPFParagraph> headerParagraphs = doc.getHeaderList().get(0).getParagraphs();
             for (int i = 0; i < headerParagraphs.size(); i++) {
                 if (!headerParagraphs.get(i).isEmpty()) {
                     System.out.println(headerParagraphs.get(i).getText());
-                    if (headerParagraphs.get(i).getText().contains("[TWORD]")) {
-                        String returnV = headerParagraphs.get(i).getText().replace("[TWORD]", prep.get(cbBox.getSelectedIndex()));
+
+                }
+            }*/
+
+            List<XWPFParagraph> docParagraphs = doc.getParagraphs();
+            for (int i = 0; i < docParagraphs.size(); i++) {
+                if (!docParagraphs.get(i).isEmpty()) {
+                    if (docParagraphs.get(i).getText().contains("[TWORD]")) {
+                        String returnV = docParagraphs.get(i).getText().replace("[TWORD]", prep.get(cbBox.getSelectedIndex()));
                         System.out.println(returnV);
-                        XWPFParagraph current = headerParagraphs.get(i);
+                        XWPFParagraph current = docParagraphs.get(i);
                         XWPFRun run = current.getRuns().get(0);
                         current.getRuns().get(1).setText("", 0);
                         current.getRuns().get(2).setText("", 0);
                         run.setText(returnV, 0);
                     }
-                    if (headerParagraphs.get(i).getText().contains("[CIRCUNSCRIÇÃO]")) {
-                        String returnV = headerParagraphs.get(i).getText().replace("[CIRCUNSCRIÇÃO]", getCircunscricao(3));
+                    if (docParagraphs.get(i).getText().contains("[CIRCUNSCRIÇÃO1]")) {
+                        String returnV = docParagraphs.get(i).getText().replace("[CIRCUNSCRIÇÃO1]", getCircunscricao(3));
                         System.out.println(returnV);
-                        XWPFParagraph current = headerParagraphs.get(i);
+                        XWPFParagraph current = docParagraphs.get(i);
                         XWPFRun run = current.getRuns().get(0);
                         run.setText("", 0);
                         current.getRuns().get(1).setText("", 0);
                         current.getRuns().get(2).setText("", 0);
                         run.setText(returnV, 0);
                     }
-                }
-            }
-
-            List<XWPFParagraph> docParagraphs = doc.getParagraphs();
-            for (int i = 0; i < docParagraphs.size(); i++) {
-                if (!docParagraphs.get(i).isEmpty()) {
                     System.out.println(docParagraphs.get(i).getText());
                     if (docParagraphs.get(i).getText().contains("[CIRCUNSCRIÇÃO]")) {
                         String returnV = docParagraphs.get(i).getText().replace("[CIRCUNSCRIÇÃO]", getCircunscricao(2));
@@ -135,7 +136,6 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
                     }
                 }
             }
-            write(doc);
             certidoes.add(doc);
 
         } catch (Exception e) {
@@ -144,8 +144,6 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
     }
 
     public void write(XWPFDocument doc) {
-        String folder = "C:/temp/";
-        String fileName = "saida.docx";
         File f = new File(folder);
         try {
             if (!f.exists()) {
@@ -199,6 +197,17 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
         }
         return null;
 
+    }
+
+    public XWPFDocument mergeFiles(List<XWPFDocument> certidoes) {
+        XWPFDocument file = certidoes.get(0);
+        for (int i = 1; i < certidoes.size(); i++) {
+            /*
+            Copy the body from de document
+             */
+            file.getDocument().addNewBody().set(certidoes.get(i).getDocument().getBody());
+        }
+        return file;
     }
 
     public void createPrepList() {
@@ -266,15 +275,26 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
             }
         }
         if (e.getSource() == btnPrint) {
-            //PrinterJob job = PrinterJob.getPrinterJob();
-            /*for (int i = 0; i < certidoes.size(); i++) {
-
-            }*/
             if (lm.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Nenhum processo foi inserido.");
+            } else {
+                for (int i = 0; i < lm.getSize(); i++) {
+                    loadFile(lm.getElementAt(i));
+                }
+                write(mergeFiles(certidoes));
             }
-            else {
-                loadFile(lm.getElementAt(0));
+            File f = new File(folder + fileName);
+            if (!Desktop.isDesktopSupported()) {
+                System.out.println("Desktop is not supported");
+                return;
+            }
+            Desktop desktop = Desktop.getDesktop();
+            try {
+                if (f.exists()) {
+                    desktop.open(f);
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "O arquivo criado não existe mais.");
             }
         }
     }
