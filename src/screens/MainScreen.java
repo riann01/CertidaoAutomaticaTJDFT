@@ -22,6 +22,7 @@ import java.util.Locale;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import java.awt.Desktop;
+import java.util.Properties;
 
 public class MainScreen extends javax.swing.JFrame implements ActionListener {
 
@@ -33,11 +34,11 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
     private ListModelArrayList lm = new ListModelArrayList();
     private List<XWPFDocument> certidoes = new ArrayList<>();
     private List<String> prep = new ArrayList<>();
-    private File certidao = new File("C:\\Users\\Rian\\Documents\\NetBeansProjects\\CertidaoAutomatica\\src\\etc\\CERTIDÃO.docx");
+    private File certidao;
     private String folder = "C:/temp/";
     private String fileName = "saida.docx";
 
-    public MainScreen() {
+    public MainScreen(String p) {
         initComponents();
         this.setLocationRelativeTo(null);
         this.setResizable(false);
@@ -46,10 +47,16 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
         btnInclude.addActionListener(this);
         btnDelete.addActionListener(this);
         btnPrint.addActionListener(this);
+        btnClear.addActionListener(this);
+        btnUp.addActionListener(this);
+        btnDown.addActionListener(this);
         cbBox.addActionListener(this);
         txtFieldProcess.setText(year + getCircunscricao(1) + "10000000");
         processList.setModel((ListModel) lm);
         createPrepList();
+        System.out.println(p);
+        certidao = new File(p);
+        this.setVisible(true);
     }
 
     public void loadFile(Process process) {
@@ -69,14 +76,6 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
                     runs.get(0).setText(returnV, 0);
                 }
             }
-            /*List<XWPFParagraph> headerParagraphs = doc.getHeaderList().get(0).getParagraphs();
-            for (int i = 0; i < headerParagraphs.size(); i++) {
-                if (!headerParagraphs.get(i).isEmpty()) {
-                    System.out.println(headerParagraphs.get(i).getText());
-
-                }
-            }*/
-
             List<XWPFParagraph> docParagraphs = doc.getParagraphs();
             for (int i = 0; i < docParagraphs.size(); i++) {
                 if (!docParagraphs.get(i).isEmpty()) {
@@ -282,6 +281,12 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
                     loadFile(lm.getElementAt(i));
                 }
                 write(mergeFiles(certidoes));
+                if (checkClear.isSelected()) {
+                    certidoes.clear();
+                    lm.removeAllElements();
+                    processList.setModel((ListModel) lm);
+                    processList.updateUI();
+                }
             }
             File f = new File(folder + fileName);
             if (!Desktop.isDesktopSupported()) {
@@ -297,6 +302,57 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this, "O arquivo criado não existe mais.");
             }
         }
+        if (e.getSource() == btnClear) {
+            certidoes.clear();
+            lm.removeAllElements();
+            processList.setModel((ListModel) lm);
+            processList.updateUI();
+        }
+        if (e.getSource() == btnUp) {
+            if (processList.getSelectedIndex() == -1) {
+                JOptionPane.showMessageDialog(this, "Nenhum Processo Selecionado.");
+            } else {
+                if (lm.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Nenhum´processo foi inserido.");
+                } else {
+                    int index = processList.getSelectedIndex();
+                    if (index != 0) {
+                        Process current = lm.getElementAt(index);
+                        Process before = lm.getElementAt(index - 1);
+                        lm.removeElement(current);
+                        lm.removeElement(before);
+                        lm.addElementAt(index - 1, current);
+                        lm.addElementAt(index, before);
+                        processList.setModel((ListModel) lm);
+                        processList.updateUI();
+                        processList.setSelectedIndex(index-1);
+                    }
+                }
+            }
+        }
+        if (e.getSource() == btnDown) {
+            if (processList.getSelectedIndex() == -1) {
+                JOptionPane.showMessageDialog(this, "Nenhum Processo Selecionado.");
+            } else {
+                if (lm.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Nenhum´processo foi inserido.");
+                } else {
+                    int index = processList.getSelectedIndex();
+                    if (index < lm.getSize() - 1) {
+                        Process current = lm.getElementAt(index);
+                        Process after = lm.getElementAt(index + 1);
+                        lm.removeElement(current);
+                        lm.removeElement(after);
+                        
+                        lm.addElementAt(index, after);
+                        lm.addElementAt(index + 1, current);
+                        processList.setModel((ListModel) lm);
+                        processList.updateUI();
+                        processList.setSelectedIndex(index + 1);
+                    }
+                }
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -309,7 +365,7 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
         jLabel2 = new javax.swing.JLabel();
         btnInclude = new javax.swing.JButton();
         txtFieldProcess = new javax.swing.JFormattedTextField();
-        jCheckBox1 = new javax.swing.JCheckBox();
+        checkClear = new javax.swing.JCheckBox();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         processList = new javax.swing.JList<>();
@@ -339,7 +395,7 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
             ex.printStackTrace();
         }
 
-        jCheckBox1.setText("Limpar a lista ao terminar");
+        checkClear.setText("Limpar a lista ao terminar");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -363,7 +419,7 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
                 .addContainerGap())
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(163, 163, 163)
-                .addComponent(jCheckBox1)
+                .addComponent(checkClear)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -378,7 +434,7 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
                     .addComponent(txtFieldQtdPag, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtFieldProcess, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addComponent(jCheckBox1)
+                .addComponent(checkClear)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE)
                 .addComponent(btnInclude)
                 .addContainerGap())
@@ -436,7 +492,7 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
                         .addGap(0, 78, Short.MAX_VALUE))))
         );
 
-        btnPrint.setText("Imprimir");
+        btnPrint.setText("Gerar Certidões");
 
         btnClose.setText("Fechar");
 
@@ -476,7 +532,7 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
                     .addGroup(layout.createSequentialGroup()
                         .addGap(156, 156, 156)
                         .addComponent(btnPrint)
-                        .addGap(64, 64, 64)
+                        .addGap(42, 42, 42)
                         .addComponent(btnClose)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
@@ -506,38 +562,6 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(MainScreen.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(MainScreen.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(MainScreen.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(MainScreen.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new MainScreen().setVisible(true);
-            }
-        });
-    }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnClear;
     private javax.swing.JButton btnClose;
@@ -547,7 +571,7 @@ public class MainScreen extends javax.swing.JFrame implements ActionListener {
     private javax.swing.JButton btnPrint;
     private javax.swing.JButton btnUp;
     private javax.swing.JComboBox<String> cbBox;
-    private javax.swing.JCheckBox jCheckBox1;
+    private javax.swing.JCheckBox checkClear;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
